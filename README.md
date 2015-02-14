@@ -1,3 +1,3 @@
 ## GTEx
-Songpeng Zu 
+Songpeng Zu  
 eQTL Detection from GTEx data by Bayesian nonparametric method.
