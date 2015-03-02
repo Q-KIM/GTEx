@@ -18,7 +18,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # The start/end point is only dependent on genelocsnp data.
 # They should be the same across different tissues.
-gene_residual <- fread(args[1],header=TRUE) # Read gene residuals' matrix, full path needed.
+gene_residual <- fread(args[1],skip=1) # Read gene residuals' matrix, full path needed.
 startpoint <- strtoi(args[2]) # gene lable start 
 endpoint <- strtoi(args[3]) # gene lable end
 tissuenm <- args[4]
@@ -28,24 +28,31 @@ outdir <- "/n/home00/szu/gtex"
 outfilename <- paste(paste(outdir,tissuenm,sep="/"),startpoint,endpoint,sep="_")
 
 #-- Get the genes' name, samples' name and gene_residual_matrix
-gene_samplenm <- colnames(gene_residual)[2:ncol(gene_residual)]
-genenm <- gene_residual[,1,with=FALSE]
+con <- file(args[1],open="r")
+templine < - readLines(con,n=1)
+close(con)
+gene_samplenm <- strsplit(templine,split="\t")
+#gene_samplenm <- colnames(gene_residual)[2:ncol(gene_residual)]
+genenm <- unlist(gene_residual[,1,with=FALSE])
 gene_residual_matrix <- as.matrix(gene_residual[1:nrow(gene_residual),2:ncol(gene_residual),with=FALSE])
 dimnames(gene_residual_matrix) <- list(genenm,gene_samplenm)
 rm(gene_residual)
 
 # FUNCTION of extracting SNP samples' names from gene_samplenm.
 getSNPsampleIds <- function(genenmstr){
-    m = str_match_all(genenmstr,'(^G.*)\\.[0-9]{4}')
+    txt <- gsub("\\.","-",genenmstr)
+    m = str_match_all(txt,'(^G.*)-[0-9]{4}')
     return(m[[1]][2])
 }
-gene2snp_samplenm <- unlist(apply(as.matrix(gene_samplenm),getSNPsampleIds))
+gene2snp_samplenm <- unlist(apply(as.matrix(gene_samplenm),1,function(x) getSNPsampleIds(x)))
+colnames(gene_residual_matrix) <- gene2snp_samplenm
 
 #-- Get the snps' name, samples' name and snp_value_matrix
-snp_samplenm <- as.matrix(read.table(paste(supdir,"GTEx.SNP.sampleID",sep="/")) 
+snp_samplenm <- as.matrix(read.table(paste(supdir,"GTEx.SNP.sampleID",sep="/"))) 
 snp_value <- fread(paste(supdir,"GTEx.wholegenome.SNP",sep="/"))
 snp_value_matrix <- as.matrix(snp_value[ ,2:ncol(snp_value),with=FALSE])
 dimnames(snp_value_matrix) <- list(snp_value$V1, snp_samplenm[ ,1])
+mode(snp_value_matrix) <- "numeric" # Convert the character matrix to numeric.
 rm(snp_value)
 
 #-- Reorganize both of the matrix based on the samples' ID.
@@ -56,21 +63,24 @@ snp_re_matrix <- snp_value_matrix[ ,cosamplenm]
 rm(snp_value_matrix)
 
 #-- FUNCTION of DECODE 
-eqtlDECODE <- function(genestarnm,geneendnm){
+eqtlDECODE <- function(genestartnm,geneendnm){
     # Load gene-snp relationship information
     gene2snptotal <- fread(paste(supdir,"genelocsnp",sep="/"),header=FALSE,sep="\n")
     getgene2snp <- function(index1,index2){
         List <- list()
+        listname <- c()
         for(i in index1:index2){
             myVector <- strsplit(as.character(gene2snptotal[i,]),"\t")
             tmplist <- list(myVector[[1]][2:length(myVector[[1]] )] )
-            names(tmplist) <- myVecotr[[1]][1]
+            listname[length(listname)+1] <- myVector[[1]][1]
             List[[length(List)+1]] <- tmplist
         }
-        return(List)
+        return(list(List,listname))
     }
-    gene2snp <- getgene2snp(genestarnm,geneendnm)
-    rm(gene2snptotal)
+    gene2snptmp <- getgene2snp(genestartnm,geneendnm)
+    gene2snp <- gene2snp[[1]]
+    names(gene2snp) <- unlist(gene2snptmp[[2]])
+    rm(gene2snptotal,gene2snptmp)
     
     # Get the final genes with genelocsnp and gene residual information.
     genearray <- as.matrix(intersect(names(gene2snp),genenm))
@@ -80,7 +90,7 @@ eqtlDECODE <- function(genestarnm,geneendnm){
         # The singlenm should be in the gene_residual_matrix.
         genearray <- gene_re_matrix[singlenm, ]
         # The singlenm should also be in the gene2snp.
-        snparray <- snp_re_matrix[gene2snp[[singlenm]], ]
+        snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
         snparray_order <- snparray[ ,order(genearray)]
         rm(snparray)
         # Set the parameters.
