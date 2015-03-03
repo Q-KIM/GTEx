@@ -46,6 +46,10 @@ getSNPsampleIds <- function(genenmstr){
 }
 gene2snp_samplenm <- unlist(apply(as.matrix(gene_samplenm),1,function(x) getSNPsampleIds(x)))
 colnames(gene_residual_matrix) <- gene2snp_samplenm
+# Evarage gene residuals by the same colnames (i.e., the same samples)
+if (anyDuplicated(gene2snp_samplenm)){
+    gene_residual_matrix <- sapply(unique(gene2snp_samplenm),function(i) rowMeans(gene_residual_matrix[,gene2snp_samplenm]))
+}
 
 #-- Get the snps' name, samples' name and snp_value_matrix
 snp_samplenm <- as.matrix(read.table(paste(supdir,"GTEx.SNP.sampleID",sep="/"))) 
@@ -57,9 +61,20 @@ rm(snp_value)
 
 #-- Reorganize both of the matrix based on the samples' ID.
 cosamplenm <- intersect(gene2snp_samplenm,colnames(snp_value_matrix))
+
 gene_re_matrix <- gene_residual_matrix[ ,cosamplenm]
 rm(gene_residual_matrix)
-snp_re_matrix <- snp_value_matrix[ ,cosamplenm]
+
+snp_tmp_matrix <- snp_value_matrix[ ,cosamplenm]
+# Filter SNPs whose MAF <5% or >95%
+snp_sumrow <- rowSums(snp_tmp_matrix,na.rm=TRUE)
+snp_nanum <- rowSums(is.na(snp_tmp_matrix))
+snp_rowsamplenum <- 2*(ncol(snp_tmp_matrix) - snp_nanum) # SNP are recorded as 0,1,2
+snp_rowsamplenum[which(snp_rowsamplenum==0)] <- 1 # Avoid 0.
+snp_rowratio <- snp_sumrow/snp_rowsamplenum
+# We might ignore the situation that most samples' values of a given SNP are 1. 
+snp_need <- row.names(snp_tmp_matrix)[which(snp_rowratio>=0.05 & snp_rowratio <= 0.95)]
+snp_re_matrix <- snp_tmp_matrix[snp_need,]
 rm(snp_value_matrix)
 
 #-- FUNCTION of DECODE 
@@ -107,6 +122,9 @@ eqtlDECODE <- function(genestartnm,geneendnm){
 #-- Main Function
 eqtlDECODE(genestartnm,geneendnm)
 
+#-- Note: after getting the results, 
+# the script of "Out_DECODE_Result.py" 
+# is used to extract the final format of the DECODE results.
 
 
 
