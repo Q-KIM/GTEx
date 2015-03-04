@@ -18,23 +18,24 @@ args <- commandArgs(trailingOnly = TRUE)
 # The start/end point is only dependent on genelocsnp data.
 # They should be the same across different tissues.
 gene_residual <- fread(args[1],skip=1) # Read gene residuals' matrix, full path needed.
-startpoint <- strtoi(args[2]) # gene lable start 
-endpoint <- strtoi(args[3]) # gene lable end
+genestartnm <- strtoi(args[2]) # gene lable start 
+geneendnm <- strtoi(args[3]) # gene lable end
 tissuenm <- args[4]
-
+outdir <- args[5]
 #--Define outputfile name
-outdir <- "/n/home00/szu/gtex"
+#outdir <- "/n/home00/szu/gtex"
 outfilename <- paste(paste(outdir,tissuenm,sep="/"),startpoint,endpoint,sep="_")
 
 #-- Get the genes' name, samples' name and gene_residual_matrix
 con <- file(args[1],open="r")
-templine < - readLines(con,n=1)
+templine <- readLines(con,n=1)
 close(con)
 gene_samplenm <- strsplit(templine,split="\t")
 #gene_samplenm <- colnames(gene_residual)[2:ncol(gene_residual)]
 genenm <- unlist(gene_residual[,1,with=FALSE])
 gene_residual_matrix <- as.matrix(gene_residual[1:nrow(gene_residual),2:ncol(gene_residual),with=FALSE])
-dimnames(gene_residual_matrix) <- list(genenm,gene_samplenm)
+row.names(gene_residual_matrix) <- genenm
+#dimnames(gene_residual_matrix) <- list(genenm,unlist(gene_samplenm))
 rm(gene_residual)
 
 # FUNCTION of extracting SNP samples' names from gene_samplenm.
@@ -43,7 +44,7 @@ getSNPsampleIds <- function(genenmstr){
     m = str_match_all(txt,'(^G.*)-[0-9]{4}')
     return(m[[1]][2])
 }
-gene2snp_samplenm <- unlist(apply(as.matrix(gene_samplenm),1,function(x) getSNPsampleIds(x)))
+gene2snp_samplenm <- unlist(apply(as.matrix(unlist(gene_samplenm)),1,function(x) getSNPsampleIds(x)))
 colnames(gene_residual_matrix) <- gene2snp_samplenm
 # Evarage gene residuals by the same colnames (i.e., the same samples)
 if (anyDuplicated(gene2snp_samplenm)){
@@ -83,41 +84,36 @@ genenm_loc <- as.matrix(read.table(paste(supdir,"loc_gene_ensemble",sep="/"),
 gene2snptotal <- as.matrix(fread(paste(supdir,"genelocsnp",sep="/"),header=FALSE,sep="\n"))
 row.names(gene2snptotal) <- genenm_loc
 
-#-- FUNCTION of DECODE 
-eqtlDECODE <- function(genestartnm,geneendnm){
-    # Get the final genes with genelocsnp and gene residual information.
-    genearray <- as.matrix(intersect(genenm_loc[genestartnm:geneendnm,],genenm))
-    gene2snpsub <- as.matrix(gene2snptotal[genearray,])
-        
-    getgene2snp <- function(gene2snpstr){
-        myVector <- strsplit(gene2snpstr,"\t")
-        return(intersect(snp_need,myVector[[1]][2:length(myVector[[1]] )])) 
-    }
-    
-    gene2snp <- apply(gene2snpsub,1,function(x) getgene2snp(x))
-    rm(gene2snptotal,gene2snpsub)
+#-- Main of DECODE 
+# Get the final genes with genelocsnp and gene residual information.
+genearray <- as.matrix(intersect(genenm_loc[genestartnm:geneendnm,],genenm))
+gene2snpsub <- as.matrix(gene2snptotal[genearray,])
 
-    # FUNCTION Of DECODE for single gene.
-    eqtlDECODEsingle <- function(singlenm){
-        # The singlenm should be in the gene_residual_matrix.
-        genearray <- gene_re_matrix[singlenm, ]
-        # The singlenm should also be in the gene2snp.
-        snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
-        snparray_order <- snparray[ ,order(genearray)]
-        rm(snparray)
-        # Set the parameters.
-        dim <- 3 # The categories of SNPs.(0,1,2)
-        lambda <- 1.0
-        alpha <- 1.0
-        decode_values <- apply(snparray_order,1,function(x) ds_bf_u(x[!is.na(x)],dim,lambda,alpha))
-        cat(paste(c(singlenm,decode_values),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
-    }
-    # apply the eqtlDECODEsingle function.
-    apply(genearray,1,function(x) eqtlDECODEsingle(x))
+getgene2snp <- function(gene2snpstr){
+    myVector <- strsplit(gene2snpstr,"\t")
+    return(intersect(snp_need,myVector[[1]][2:length(myVector[[1]] )])) 
 }
 
-#-- Main Function
-eqtlDECODE(genestartnm,geneendnm)
+gene2snp <- apply(gene2snpsub,1,function(x) getgene2snp(x))
+rm(gene2snptotal,gene2snpsub)
+
+# FUNCTION Of DECODE for single gene.
+eqtlDECODEsingle <- function(singlenm){
+    # The singlenm should be in the gene_residual_matrix.
+    genearray <- gene_re_matrix[singlenm, ]
+    # The singlenm should also be in the gene2snp.
+    snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
+    snparray_order <- snparray[ ,order(genearray)]
+    rm(snparray)
+    # Set the parameters.
+    dim <- 3 # The categories of SNPs.(0,1,2)
+    lambda <- 1.0
+    alpha <- 1.0
+    decode_values <- apply(snparray_order,1,function(x) ds_bf_u(x[!is.na(x)],dim,lambda,alpha))
+    cat(paste(c(singlenm,decode_values),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
+}
+# apply the eqtlDECODEsingle function.
+apply(genearray,1,function(x) eqtlDECODEsingle(x))
 
 #-- Note: after getting the results, 
 # the script of "Out_DECODE_Result.py" 
