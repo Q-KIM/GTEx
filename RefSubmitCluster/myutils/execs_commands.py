@@ -140,6 +140,13 @@ def inferDPB_fnfp(output_dir,fn,fp,thread,d2s,p2d,d2p,s2d_in,outname):
     cmd = "cd %s;%s -f %f -p %f -t %d -s %s -d %s -i %s -n %s -o %s" %(output_dir,InferDPBcommand,fn,fp,thread,d2s,p2d,d2p,s2d_in,outname)
     return cmd
 
+def gtex_decode(gene_residual_file,startpoint,endpoint,tissuename,outdir):
+    '''Generate the commands for DECODE on GTEx data.
+    '''
+    DECODEcommand = "Rscript /n/home00/szu/gtex/DECODE-eQTL_150227.R"
+    cmd = "%s %s %s %s %s %s" %(DECODEcommand,gene_residual_file,str(startpoint),str(endpoint),tissuename,outdir)
+    return cmd
+
 class bedops:
     def __init__(self):
         self.server = myos.which_server()
