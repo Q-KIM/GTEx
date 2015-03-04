@@ -13,9 +13,8 @@ library(stringr) # used for getSampleIds
 #-- Supplementary Data Directory 
 supdir <- "/n/home00/szu/KR_eQTL/GTex"
 
-#-- Get the input parameters.
+#-- Get the input parameters
 args <- commandArgs(trailingOnly = TRUE)
-
 # The start/end point is only dependent on genelocsnp data.
 # They should be the same across different tissues.
 gene_residual <- fread(args[1],skip=1) # Read gene residuals' matrix, full path needed.
@@ -23,7 +22,7 @@ startpoint <- strtoi(args[2]) # gene lable start
 endpoint <- strtoi(args[3]) # gene lable end
 tissuenm <- args[4]
 
-#--Define outputfile name.
+#--Define outputfile name
 outdir <- "/n/home00/szu/gtex"
 outfilename <- paste(paste(outdir,tissuenm,sep="/"),startpoint,endpoint,sep="_")
 
@@ -77,28 +76,26 @@ snp_need <- row.names(snp_tmp_matrix)[which(snp_rowratio>=0.05 & snp_rowratio <=
 snp_re_matrix <- snp_tmp_matrix[snp_need,]
 rm(snp_value_matrix)
 
+#-- Load rownames (genes' names) in the genelocsnp
+genenm_loc <- as.matrix(read.table(paste(supdir,"loc_gene_ensemble",sep="/"),
+                                   header=FALSE,quote="", colClasses = "character"))
+# Load gene-snp relationship information
+gene2snptotal <- as.matrix(fread(paste(supdir,"genelocsnp",sep="/"),header=FALSE,sep="\n"))
+row.names(gene2snptotal) <- genenm_loc
+
 #-- FUNCTION of DECODE 
 eqtlDECODE <- function(genestartnm,geneendnm){
-    # Load gene-snp relationship information
-    gene2snptotal <- fread(paste(supdir,"genelocsnp",sep="/"),header=FALSE,sep="\n")
-    getgene2snp <- function(index1,index2){
-        List <- list()
-        listname <- c()
-        for(i in index1:index2){
-            myVector <- strsplit(as.character(gene2snptotal[i,]),"\t")
-            tmplist <- list(myVector[[1]][2:length(myVector[[1]] )] )
-            listname[length(listname)+1] <- myVector[[1]][1]
-            List[[length(List)+1]] <- tmplist
-        }
-        return(list(List,listname))
-    }
-    gene2snptmp <- getgene2snp(genestartnm,geneendnm)
-    gene2snp <- gene2snp[[1]]
-    names(gene2snp) <- unlist(gene2snptmp[[2]])
-    rm(gene2snptotal,gene2snptmp)
-    
     # Get the final genes with genelocsnp and gene residual information.
-    genearray <- as.matrix(intersect(names(gene2snp),genenm))
+    genearray <- as.matrix(intersect(genenm_loc[genestartnm:geneendnm,],genenm))
+    gene2snpsub <- as.matrix(gene2snptotal[genearray,])
+        
+    getgene2snp <- function(gene2snpstr){
+        myVector <- strsplit(gene2snpstr,"\t")
+        return(intersect(snp_need,myVector[[1]][2:length(myVector[[1]] )])) 
+    }
+    
+    gene2snp <- apply(gene2snpsub,1,function(x) getgene2snp(x))
+    rm(gene2snptotal,gene2snpsub)
 
     # FUNCTION Of DECODE for single gene.
     eqtlDECODEsingle <- function(singlenm){
