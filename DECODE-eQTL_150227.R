@@ -24,7 +24,7 @@ tissuenm <- args[4]
 outdir <- args[5]
 #--Define outputfile name
 #outdir <- "/n/home00/szu/gtex"
-outfilename <- paste(paste(outdir,tissuenm,sep="/"),startpoint,endpoint,sep="_")
+outfilename <- paste(paste(outdir,tissuenm,sep="/"),genestartnm,geneendnm,sep="_")
 
 #-- Get the genes' name, samples' name and gene_residual_matrix
 con <- file(args[1],open="r")
