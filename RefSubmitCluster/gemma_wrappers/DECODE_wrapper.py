@@ -57,12 +57,42 @@ def main():
     logs_dir = "/n/home00/szu/gtex/logs/"
     input_dir = "/n/home00/szu/KR_eQTL/GTex/"
     outdir = "/n/home00/szu/gtex/"    
-    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Breast.txt"
-    tissuenm = "Breast"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Breast.txt"
+#    tissuenm = "Breast"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Adipose.txt"
+#    tissuenm = "Adipose"
+
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_BloodVessel.txt"
+#    tissuenm = "BloodVessel"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Brain.txt"
+#    tissuenm = "Brain"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Colon.txt"
+#    tissuenm = "Colon"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Esophagus.txt"
+#    tissuenm = "Esophagus"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Heart.txt"
+#    tissuenm = "Heart"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Lung.txt"
+#    tissuenm = "Lung"
+    
+#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Muscle.txt"
+#    tissuenm = "Muscle"
+    
+    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Nerve.txt"
+    tissuenm = "Nerve"
+    
     outdirspecific = outdir + tissuenm
+    logspecific = logs_dir + tissuenm
     splitnum = 50
 
-    write_DECODE_jobs(logs_dir,input_dir,gene_residual_file,tissuenm,outdirspecific,splitnum,False)
+    write_DECODE_jobs(logspecific,input_dir,gene_residual_file,tissuenm,outdirspecific,splitnum,True)
 
 if __name__ == "__main__":
     main()
