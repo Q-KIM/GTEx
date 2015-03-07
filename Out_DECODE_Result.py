@@ -51,7 +51,8 @@ def OutDECODE(genetosnpfile,genetosnpbf,bfcut,outfilename):
                     break
     outfile.close()                                  
     return 0
-
+def main():
+    # something should be here.
 if __name__ == "__main__":
 
     genetosnpfile = "genelocsnp"
