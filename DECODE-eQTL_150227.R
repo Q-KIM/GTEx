@@ -100,10 +100,10 @@ rm(gene2snptotal,gene2snpsub)
 # FUNCTION Of DECODE for single gene.
 eqtlDECODEsingle <- function(singlenm){
     # The singlenm should be in the gene_residual_matrix.
-    genearray <- gene_re_matrix[singlenm, ]
+    singlegenearray <- gene_re_matrix[singlenm, ]
     # The singlenm should also be in the gene2snp.
     snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
-    snparray_order <- snparray[ ,order(genearray)]
+    snparray_order <- snparray[ ,order(singlegenearray)]
     rm(snparray)
     # Set the parameters.
     dim <- 3 # The categories of SNPs.(0,1,2)
