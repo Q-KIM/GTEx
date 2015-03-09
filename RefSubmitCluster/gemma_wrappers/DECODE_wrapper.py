@@ -37,7 +37,7 @@ def write_DECODE_jobs(logs_dir, input_dir, gene_residual_file, tissuenm, outdir,
     genetotalnum = myos.wccount(input_dir+"genelocsnp")
     taskseq = splitinteger(genetotalnum,splitnum)
     for i in range(0,splitnum):
-        job_name = 'gtex_decode'+'_'+str(taskseq[i][0])+'_'+str(taskseq[i][1])
+        job_name = 'gtex_decode'+'_'+ tissuenm + str(taskseq[i][0])+'_'+str(taskseq[i][1])
         bsubcmd = myos.write_bsub_string_no_rm_logs_dir(logs_dir,job_name,qname=qname,mem_usage=mem_usage, time='180')
         if os.path.exists(gene_residual_file) is False:
             print "Cannot find some input files!"
