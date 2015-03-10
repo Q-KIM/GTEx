@@ -98,15 +98,6 @@ gene2snp <- apply(gene2snpsub,1,function(x) getgene2snp(x))
 rm(gene2snptotal,gene2snpsub)
 
 eqtlDECODEsingle <- function(singlenm){
-<<<<<<< HEAD
-=======
-    # The singlenm should be in the gene_residual_matrix.
-    singlegenearray <- gene_re_matrix[singlenm, ]
-    # The singlenm should also be in the gene2snp.
-    snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
-    snparray_order <- snparray[ ,order(singlegenearray)]
-    rm(snparray)
->>>>>>> 929c55b42e3af907de07e8d4958a4d00a0ce6159
     # Set the parameters.
     dim <- 3 # The categories of SNPs.(0,1,2)
     lambda <- 1.0
