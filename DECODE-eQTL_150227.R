@@ -97,20 +97,27 @@ getgene2snp <- function(gene2snpstr){
 gene2snp <- apply(gene2snpsub,1,function(x) getgene2snp(x))
 rm(gene2snptotal,gene2snpsub)
 
-# FUNCTION Of DECODE for single gene.
 eqtlDECODEsingle <- function(singlenm){
-    # The singlenm should be in the gene_residual_matrix.
-    genearray <- gene_re_matrix[singlenm, ]
-    # The singlenm should also be in the gene2snp.
-    snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
-    snparray_order <- snparray[ ,order(genearray)]
-    rm(snparray)
     # Set the parameters.
     dim <- 3 # The categories of SNPs.(0,1,2)
     lambda <- 1.0
     alpha <- 1.0
-    decode_values <- apply(snparray_order,1,function(x) ds_bf_u(x[!is.na(x)],dim,lambda,alpha))
-    cat(paste(c(singlenm,decode_values),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
+    # The singlenm should be in the gene_residual_matrix.
+    genearray <- gene_re_matrix[singlenm, ]
+    # The singlenm should also be in the gene2snp.
+    snparray <- snp_re_matrix[unlist(gene2snp[[singlenm]]), ]
+    if(is.matrix(snparray)){
+        snparray_order <- snparray[ ,order(genearray)]
+        rm(snparray)
+        decode_values <- apply(snparray_order,1,function(x) ds_bf_u(x[!is.na(x)],dim,lambda,alpha))
+        cat(paste(c(singlenm,decode_values),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
+    }
+    else{
+        snparray_order <- snparray[order(genearray)]
+        rm(snparray)
+        decode_value <- ds_bf_u(snparray_order[!is.na(snparray_order)],dim,lambda,alpha)
+        cat(paste(c(singlenm,decode_value),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
+    }
 }
 # apply the eqtlDECODEsingle function.
 apply(genearray,1,function(x) eqtlDECODEsingle(x))
