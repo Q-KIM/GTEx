@@ -104,12 +104,6 @@ dim <- 3 # The categories of SNPs.(0,1,2)
 lambda <- 1.0
 alpha <- 1.0
 
-writeDECODEsingleSNP <- function(snpnm,genenm){
-    singlesnparray <- snparray_order[snpnm, ] # Need to be ordered.
-    decode_value <- ds_bf_u(singlesnparray[!is.na(snparray)],dim,lambda,alpha)
-    cat(paste(c(genenm,snpnm,decode_value),collapse="\t"),file=outfilename,
-        sep="\n",append=TRUE)
-}
 
 eqtlDECODEsingleGeneV2 <- function(singlenm){
     # The singlenm should be in the gene_residual_matrix.
@@ -120,6 +114,12 @@ eqtlDECODEsingleGeneV2 <- function(singlenm){
         snparray_order <- snparray[ ,order(genearray)]
         rm(snparray)
         snpnames <- row.names(snparray_order)
+        writeDECODEsingleSNP <- function(snpnm,genenm){
+            singlesnparray <- snparray_order[snpnm, ] # Need to be ordered.
+            decode_value <- ds_bf_u(singlesnparray[!is.na(singlesnparray)],dim,lambda,alpha)
+            cat(paste(c(genenm,snpnm,decode_value),collapse="\t"),file=outfilename,
+                sep="\n",append=TRUE)
+        }
         lapply(snpnames,function(x) writeDECODEsingleSNP(x,singlenm))
     }else{
         singlesnpnm <- unlist(gene2snp[singlenm, ])
