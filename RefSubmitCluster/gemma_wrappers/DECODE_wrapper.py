@@ -37,8 +37,8 @@ def write_DECODE_jobs(logs_dir, input_dir, gene_residual_file, tissuenm, outdir,
     genetotalnum = myos.wccount(input_dir+"genelocsnp")
     taskseq = splitinteger(genetotalnum,splitnum)
     for i in range(0,splitnum):
-        job_name = 'gtex_decode'+'_'+ tissuenm + str(taskseq[i][0])+'_'+str(taskseq[i][1])
-        bsubcmd = myos.write_bsub_string_no_rm_logs_dir(logs_dir,job_name,qname=qname,mem_usage=mem_usage, time='180')
+        job_name = 'gtex_decode'+'_'+str(taskseq[i][0])+'_'+str(taskseq[i][1])
+        bsubcmd = myos.write_bsub_string_no_rm_logs_dir(logs_dir,job_name,qname=qname,mem_usage=mem_usage, time='300')
         if os.path.exists(gene_residual_file) is False:
             print "Cannot find some input files!"
             return 0
@@ -53,46 +53,23 @@ def write_DECODE_jobs(logs_dir, input_dir, gene_residual_file, tissuenm, outdir,
             os.system(bsubcmd)
     return 0
 
+def multissueDECODE(tissuenmlist,logs_dir,input_dir,outdir,gene_residual_file_pre,splitnum=50,execute=False):
+    for tissuenm in tissuenmlist:
+        gene_residual_file = gene_residual_file_pre + tissuenm + ".txt"
+        outdirspecific = outdir + tissuenm
+        logspecific = logs_dir + tissuenm
+        write_DECODE_jobs(logspecific,input_dir,gene_residual_file,tissuenm,outdirspecific,splitnum,execute)
+    return 0
+
 def main():
-    logs_dir = "/n/home00/szu/gtex/logs/"
-    input_dir = "/n/home00/szu/KR_eQTL/GTex/"
-    outdir = "/n/home00/szu/gtex/"    
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Breast.txt"
-#    tissuenm = "Breast"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Adipose.txt"
-#    tissuenm = "Adipose"
-
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_BloodVessel.txt"
-#    tissuenm = "BloodVessel"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Brain.txt"
-#    tissuenm = "Brain"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Colon.txt"
-#    tissuenm = "Colon"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Esophagus.txt"
-#    tissuenm = "Esophagus"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Heart.txt"
-#    tissuenm = "Heart"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Lung.txt"
-#    tissuenm = "Lung"
-    
-#    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Muscle.txt"
-#    tissuenm = "Muscle"
-    
-    gene_residual_file = "/n/home00/szu/gtex/expr_residual/expr_residual_Nerve.txt"
-    tissuenm = "Nerve"
-    
-    outdirspecific = outdir + tissuenm
-    logspecific = logs_dir + tissuenm
     splitnum = 50
-
-    write_DECODE_jobs(logspecific,input_dir,gene_residual_file,tissuenm,outdirspecific,splitnum,True)
+    execute = False
+    logs_dir = "/n/home00/szu/gtex/result/logs/"
+    input_dir = "/n/home00/szu/KR_eQTL/GTex/"
+    outdir = "/n/home00/szu/gtex/result/"   
+    gene_residual_file_pre = "/n/home00/szu/gtex/expr_residual/expr_residual_"
+    tissuenmlist = ["Adipose","Breast","BloodVessel","Brain","Colon","Esophagus","Heart","Lung","Muscle","Nerve","Pancreas","Skin","Stomach","Thyroid"]   
+    multissueDECODE(tissuenmlist,logs_dir,input_dir,outdir,gene_residual_file_pre,splitnum,execute)
 
 if __name__ == "__main__":
     main()
