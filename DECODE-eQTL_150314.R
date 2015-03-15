@@ -122,14 +122,16 @@ eqtlDECODEsingleGeneV2 <- function(singlenm){
         }
         lapply(snpnames,function(x) writeDECODEsingleSNP(x,singlenm))
     }else{
-        singlesnpnm <- unlist(gene2snp[singlenm, ])
+        singlesnpnm <- unlist(gene2snp[[singlenm]])
         snparray_tmp <- snparray[order(genearray)]
         decode_value <- ds_bf_u(snparray_tmp[!is.na(snparray_tmp)],
                                 dim,lambda,alpha)
-        cat(paste(c(genenm,snpnm,decode_value),collapse="\t"),file=outfilename,
+        cat(paste(c(singlenm,singlesnpnm,decode_value),collapse="\t"),file=outfilename,
             sep="\n",append=TRUE)
     }
 }
+# apply the eqtlDECODEsingle function.
+apply(genearray,1,function(x) eqtlDECODEsingleGeneV2(x))
 
 ## eqtlDECODEsingle <- function(singlenm){
 ##     # The singlenm should be in the gene_residual_matrix.
@@ -148,9 +150,9 @@ eqtlDECODEsingleGeneV2 <- function(singlenm){
 ##         decode_value <- ds_bf_u(snparray_order[!is.na(snparray_order)],dim,lambda,alpha)
 ##         cat(paste(c(singlenm,decode_value),collapse="\t"),file=outfilename,sep="\n",append=TRUE)
 ##     }
-}
+##}
 # apply the eqtlDECODEsingle function.
-apply(genearray,1,function(x) eqtlDECODEsingleGeneV2(x))
+#  apply(genearray,1,function(x) eqtlDECODEsingleGeneV2(x))
 
 
 
